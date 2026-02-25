@@ -115,9 +115,7 @@ export default function Dashboard({
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-full bg-[#0364FF] flex items-center justify-center">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/></svg>
-          </div>
+          <img src="/transak-logo.webp" alt="Transak" className="w-10 h-10 rounded-full" />
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Article Freshness Tracker</h1>
             <p className="text-gray-500 text-sm">{articles.length} articles · Content-aware freshness analysis</p>
