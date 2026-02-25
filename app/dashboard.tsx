@@ -152,11 +152,11 @@ export default function Dashboard({
       {/* Legend */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 shadow-sm">
         <div className="text-xs text-gray-400 mb-2 font-medium uppercase tracking-wide">How freshness is determined</div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-600">
-          <div><span className="text-emerald-600 font-medium">🌿 Evergreen</span> — "What is X", explainers, definitions → stays fresh up to 2 years</div>
-          <div><span className="text-yellow-600 font-medium">🌤️ Semi-evergreen</span> — How-to guides, tutorials → 12 month shelf life (UIs change)</div>
-          <div><span className="text-orange-600 font-medium">⏰ Time-sensitive</span> — Year references, events, predictions → expires with the year</div>
-          <div><span className="text-blue-600 font-medium">📰 News</span> — Partnerships, launches → 2 year check (verify partner still active)</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-700">
+          <div><span className="text-emerald-700 font-semibold">🌿 Evergreen</span> — "What is X", explainers, definitions → stays fresh up to 2 years</div>
+          <div><span className="text-yellow-700 font-semibold">🌤️ Semi-evergreen</span> — How-to guides, tutorials → 12 month shelf life (UIs change)</div>
+          <div><span className="text-orange-700 font-semibold">⏰ Time-sensitive</span> — Year references, events, predictions → expires with the year</div>
+          <div><span className="text-blue-700 font-semibold">📰 News</span> — Partnerships, launches → 2 year check (verify partner still active)</div>
         </div>
       </div>
 
@@ -268,7 +268,7 @@ export default function Dashboard({
                       </span>
                     </td>
                     <td className="px-4 py-3 min-w-[250px]">
-                      <span className="text-xs text-gray-500 leading-relaxed">{article.reasoning}</span>
+                      <span className="text-xs text-gray-700 leading-relaxed">{article.reasoning}</span>
                     </td>
                   </tr>
                 );
