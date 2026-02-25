@@ -162,6 +162,87 @@ function splitAndClean(val: string): string[] {
   return val.split(",").map((s) => s.trim()).filter(Boolean);
 }
 
+function inferCategory(title: string): string[] {
+  const t = title.toLowerCase();
+
+  // Podcasts
+  if (/masters of web3|ep\d|podcast/i.test(title)) return ["Podcast"];
+
+  // News & Press Releases — partnerships, integrations, launches, expansions, licenses, fundraising
+  if (
+    /\bpartner|integrat|collaborat|joins forces|teams up|now (available|live|on|integrated)|is now\b/i.test(title) ||
+    /\blaunches|secures|expands|raises|powers|lists \$|listed|welcomes\b/i.test(title) ||
+    /\blicense|registration|fintrac|fca |fiu-|soc 2|iso\/iec|certified|compliance\b/i.test(title) ||
+    /\bseries.[a-z]|fundraise|strategic round\b/i.test(title) ||
+    /\bannounce|growth|milestone|checkout now|support.*for\b/i.test(title) ||
+    /\bincident|maintenance|update on\b/i.test(title) ||
+    /\btransak (to |now |becomes|brings|makes|provides|adds|enables)\b/i.test(title) ||
+    /\bon transak\b|\bvia transak\b|\bwith transak\b|\busing transak\b/i.test(title)
+  ) return ["News & Press Release"];
+
+  // Research
+  if (/\breport|state of|research|analysis\b/i.test(title)) return ["Research and Analysis"];
+
+  // Thought leadership
+  if (/\bthoughts on|opinion|future of\b/i.test(title) && !/what is/i.test(title)) return ["Thought Leader"];
+
+  // Learning Hub — explainers, how-tos, guides, lists, educational
+  if (
+    /^what (is|are|does|makes)\b/i.test(title) ||
+    /^how (to|do|does|can)\b/i.test(title) ||
+    /\bexplain|guide|handbook|tutorial|beginner|101\b/i.test(title) ||
+    /\bvs\.?\b|\bcomparing\b|\bdifference\b/i.test(title) ||
+    /^top \d|^\d+ (best|ways|challenges|reasons|incredible)\b/i.test(title) ||
+    /\bdecoding|understanding|breaking down|deep dive|step-by-step\b/i.test(title)
+  ) return ["Learning Hub"];
+
+  // Events
+  if (/\bevent|devcon|token2049|ethdenver|conference|side events\b/i.test(title)) return ["Learning Hub"];
+
+  // Default to Learning Hub for educational-sounding content, News for everything else
+  if (/\bcrypto|blockchain|web3|defi|stablecoin|token|wallet|nft\b/i.test(title)) return ["Learning Hub"];
+
+  return ["News & Press Release"];
+}
+
+function inferTags(title: string, categories: string[]): string[] {
+  const t = title.toLowerCase();
+  const tags: string[] = [];
+
+  // Product tags
+  if (/\btransak one\b/i.test(title)) tags.push("Transak One");
+  if (/\btransak stream\b|off.?ramp|sell crypto|cash out|crypto.to.fiat/i.test(title)) tags.push("Off Ramp");
+  if (/\bon.?ramp|buy crypto|fiat.to.crypto|purchase/i.test(title)) tags.push("On-Ramp");
+  if (/\bnft checkout|nft marketplace/i.test(title)) tags.push("NFT Checkout");
+
+  // Topic tags
+  if (/\bnft\b/i.test(title)) tags.push("NFT");
+  if (/\bgaming|game|play.to.earn|p2e|gamefi\b/i.test(title)) tags.push("Gaming");
+  if (/\bdefi|decentralized finance\b/i.test(title)) tags.push("DeFi");
+  if (/\bstablecoin|usdt|usdc|pyusd|rlusd|usdg|eurc\b/i.test(title)) tags.push("Tokens & Standards");
+  if (/\bwallet\b/i.test(title)) tags.push("Wallets");
+  if (/\bkyc|compliance|regulation|license|fca|genius act|mica|clarity act|travel rule\b/i.test(title)) tags.push("Compliance");
+  if (/\bsecurity|scam|attack|poison|incident\b/i.test(title)) tags.push("Security");
+  if (/\blayer 2|l2|zkevm|rollup|superchain\b/i.test(title)) tags.push("Layer 2");
+  if (/\bethereum|eth\b/i.test(title)) tags.push("Ethereum");
+  if (/\bbitcoin|btc\b/i.test(title)) tags.push("Bitcoin");
+  if (/\bsolana|sol\b/i.test(title)) tags.push("Solana");
+  if (/\bmeme.?coin|pepe|bonk|pnut|trump|melania|moodeng\b/i.test(title)) tags.push("Memecoins");
+  if (/\bairdrop\b/i.test(title)) tags.push("Airdrops");
+  if (/\brwa|tokeniz|real.world.asset|treasury bill\b/i.test(title)) tags.push("RWA");
+  if (/\bpayment|pay |payfi|cross.border|remittance\b/i.test(title)) tags.push("Payments");
+  if (/\bstaking|restaking|yield\b/i.test(title)) tags.push("Staking");
+  if (/\bneobank|fintech|embedded finance\b/i.test(title)) tags.push("Adoption");
+  if (/\bai agent|ai crypto\b/i.test(title)) tags.push("AI");
+  if (/\baustralia|india|hong kong|philippines|thailand|hawaii|africa|uk |u\.s\.|us |singapore\b/i.test(title)) tags.push("Expansions");
+  if (/\bmetamask|phantom|ledger|zengo|coinbase|trustwallet|veworld|tokenpocket\b/i.test(title)) tags.push("Partners");
+  if (/\bhow to\b|step.by.step/i.test(title)) tags.push("How-To Guides");
+  if (/\bexplain|what is|what are|101|beginner/i.test(title)) tags.push("Blockchain 101");
+
+  return [...new Set(tags)];
+}
+
+
 export function loadArticles(): Article[] {
   const csvPath = path.join(process.cwd(), "public", "articles.csv");
   const csvContent = fs.readFileSync(csvPath, "utf-8");
@@ -180,8 +261,10 @@ export function loadArticles(): Article[] {
 
     const diffMs = now.getTime() - date.getTime();
     const ageMonths = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30.44)));
-    const categories = splitAndClean(row["Categories"] || "");
-    const tags = splitAndClean(row["Tags"] || "");
+    const rawCategories = splitAndClean(row["Categories"] || "");
+    const rawTags = splitAndClean(row["Tags"] || "");
+    const categories = rawCategories.length > 0 ? rawCategories : inferCategory(title);
+    const tags = rawTags.length > 0 ? rawTags : inferTags(title, categories);
     const contentType = detectContentType(title, categories);
     const { freshness, reasoning } = assessFreshness(title, ageMonths, contentType);
 
