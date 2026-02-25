@@ -41,6 +41,40 @@ function StatCard({ label, value, sub, color, active, onClick }: { label: string
   );
 }
 
+function escapeCsvField(val: string): string {
+  if (val.includes(",") || val.includes('"') || val.includes("\n")) {
+    return '"' + val.replace(/"/g, '""') + '"';
+  }
+  return val;
+}
+
+function downloadCSV(articles: Article[], overrides: Overrides) {
+  const headers = ["Title", "URL", "Publish Date", "Age (months)", "Content Type", "Category", "Tags", "Status", "Reasoning", "Notes"];
+  const rows = articles.map((a) => {
+    const o = overrides[a.id];
+    return [
+      a.title,
+      a.url,
+      a.publishDate,
+      String(a.ageMonths),
+      a.contentType,
+      a.categories.join("; "),
+      a.tags.join("; "),
+      o?.freshness || a.freshness,
+      o?.reasoning ?? a.reasoning,
+      o?.notes || "",
+    ].map(escapeCsvField).join(",");
+  });
+  const csv = [headers.join(","), ...rows].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `transak-articles-${new Date().toISOString().split("T")[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function EditModal({ article, override, onSave, onClose }: {
   article: Article;
   override: Override;
@@ -261,15 +295,21 @@ export default function Dashboard({
               <p className="text-gray-500 text-sm">{enrichedArticles.length} articles · Content-aware freshness analysis</p>
             </div>
           </div>
-          {overrideCount > 0 && (
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-gray-400">{overrideCount} manual override{overrideCount !== 1 ? "s" : ""}</span>
-              <button onClick={() => { if (confirm("Reset all manual overrides?")) { setOverrides({}); localStorage.removeItem("transak-freshness-overrides"); } }}
-                className="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors">
-                Reset all
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {overrideCount > 0 && (
+              <>
+                <span className="text-xs text-gray-400">{overrideCount} manual override{overrideCount !== 1 ? "s" : ""}</span>
+                <button onClick={() => { if (confirm("Reset all manual overrides?")) { setOverrides({}); localStorage.removeItem("transak-freshness-overrides"); } }}
+                  className="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors">
+                  Reset all
+                </button>
+              </>
+            )}
+            <button onClick={() => downloadCSV(enrichedArticles, overrides)}
+              className="text-xs px-3 py-1.5 rounded-lg border border-blue-200 text-[#0364FF] hover:bg-blue-50 transition-colors font-medium flex items-center gap-1.5">
+              ⬇️ Export CSV
+            </button>
+          </div>
         </div>
       </div>
 
