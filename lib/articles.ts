@@ -174,6 +174,7 @@ export function loadArticles(): Article[] {
     const url = row["Post URL"]?.trim();
     const dateStr = row["Publish date"]?.trim();
     if (!title || !url) return;
+    if (!url.includes("/blog/")) return;
     const date = parseFlexibleDate(dateStr || "");
     if (!date) return;
 
