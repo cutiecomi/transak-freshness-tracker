@@ -149,15 +149,10 @@ function assessFreshness(
     }
 
     case "news": {
-      // News doesn't really "need updating" — it's historical record
-      // But partnership announcements with dead projects, or product features that changed, do
-      if (/terra|luna|ftx/i.test(title) && !/thoughts on/i.test(title)) {
-        return { freshness: "needs-update", reasoning: "References a defunct project — may mislead readers if not noted" };
-      }
-      if (ageMonths < 6) return { freshness: "fresh", reasoning: "Recent news — still current" };
-      if (ageMonths < 12) return { freshness: "aging", reasoning: "News over 6 months old — still valid as record" };
-      if (ageMonths < 24) return { freshness: "stale", reasoning: "Old news — partnership/integration may have changed since" };
-      return { freshness: "needs-update", reasoning: "News over 2 years old — verify partner/integration still active" };
+      // News and press releases are historical records — they don't need updating
+      if (ageMonths < 6) return { freshness: "fresh", reasoning: "Recent news" };
+      if (ageMonths < 12) return { freshness: "fresh", reasoning: "News — doesn't need updating (historical record)" };
+      return { freshness: "fresh", reasoning: "News/press release — historical record, no update needed" };
     }
   }
 }
