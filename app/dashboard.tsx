@@ -20,9 +20,10 @@ const CONTENT_TYPE_CONFIG = {
 type SortKey = "title" | "publishDate" | "ageMonths" | "freshness" | "categories" | "contentType";
 type SortDir = "asc" | "desc";
 
-function StatCard({ label, value, sub, color }: { label: string; value: number; sub?: string; color: string }) {
+function StatCard({ label, value, sub, color, active, onClick }: { label: string; value: number; sub?: string; color: string; active?: boolean; onClick?: () => void }) {
   return (
-    <div className={`rounded-xl border ${color} bg-white p-5 flex flex-col gap-1 shadow-sm`}>
+    <div onClick={onClick}
+      className={`rounded-xl border ${color} bg-white p-5 flex flex-col gap-1 shadow-sm cursor-pointer transition-all hover:shadow-md hover:scale-[1.02] ${active ? "ring-2 ring-[#0364FF] ring-offset-2" : ""}`}>
       <span className="text-sm text-gray-500">{label}</span>
       <span className="text-3xl font-bold text-gray-900">{value}</span>
       {sub && <span className="text-xs text-gray-400">{sub}</span>}
@@ -124,19 +125,28 @@ export default function Dashboard({
 
       {/* Stats Row 1: Freshness */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-        <StatCard label="Total Articles" value={articles.length} color="border-blue-200" />
-        <StatCard label="🟢 Fresh" value={counts.fresh} color="border-emerald-200" />
-        <StatCard label="🟡 Aging" value={counts.aging} color="border-yellow-200" />
-        <StatCard label="🟠 Stale" value={counts.stale} color="border-orange-200" />
-        <StatCard label="🔴 Needs Update" value={counts["needs-update"]} color="border-red-200" />
+        <StatCard label="Total Articles" value={articles.length} color="border-blue-200"
+          active={!filterFreshness && !filterContentType} onClick={() => { setFilterFreshness(""); setFilterContentType(""); }} />
+        <StatCard label="🟢 Fresh" value={counts.fresh} color="border-emerald-200"
+          active={filterFreshness === "fresh"} onClick={() => { setFilterFreshness(filterFreshness === "fresh" ? "" : "fresh"); setFilterContentType(""); }} />
+        <StatCard label="🟡 Aging" value={counts.aging} color="border-yellow-200"
+          active={filterFreshness === "aging"} onClick={() => { setFilterFreshness(filterFreshness === "aging" ? "" : "aging"); setFilterContentType(""); }} />
+        <StatCard label="🟠 Stale" value={counts.stale} color="border-orange-200"
+          active={filterFreshness === "stale"} onClick={() => { setFilterFreshness(filterFreshness === "stale" ? "" : "stale"); setFilterContentType(""); }} />
+        <StatCard label="🔴 Needs Update" value={counts["needs-update"]} color="border-red-200"
+          active={filterFreshness === "needs-update"} onClick={() => { setFilterFreshness(filterFreshness === "needs-update" ? "" : "needs-update"); setFilterContentType(""); }} />
       </div>
 
       {/* Stats Row 2: Content types */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-        <StatCard label="🌿 Evergreen" value={contentCounts.evergreen} sub="Concepts & explainers" color="border-emerald-200" />
-        <StatCard label="🌤️ Semi-evergreen" value={contentCounts["semi-evergreen"]} sub="Guides & tutorials" color="border-yellow-200" />
-        <StatCard label="⏰ Time-sensitive" value={contentCounts["time-sensitive"]} sub="Year-specific content" color="border-orange-200" />
-        <StatCard label="📰 News" value={contentCounts.news} sub="Partnerships & launches" color="border-blue-200" />
+        <StatCard label="🌿 Evergreen" value={contentCounts.evergreen} sub="Concepts & explainers" color="border-emerald-200"
+          active={filterContentType === "evergreen"} onClick={() => { setFilterContentType(filterContentType === "evergreen" ? "" : "evergreen"); setFilterFreshness(""); }} />
+        <StatCard label="🌤️ Semi-evergreen" value={contentCounts["semi-evergreen"]} sub="Guides & tutorials" color="border-yellow-200"
+          active={filterContentType === "semi-evergreen"} onClick={() => { setFilterContentType(filterContentType === "semi-evergreen" ? "" : "semi-evergreen"); setFilterFreshness(""); }} />
+        <StatCard label="⏰ Time-sensitive" value={contentCounts["time-sensitive"]} sub="Year-specific content" color="border-orange-200"
+          active={filterContentType === "time-sensitive"} onClick={() => { setFilterContentType(filterContentType === "time-sensitive" ? "" : "time-sensitive"); setFilterFreshness(""); }} />
+        <StatCard label="📰 News" value={contentCounts.news} sub="Partnerships & launches" color="border-blue-200"
+          active={filterContentType === "news"} onClick={() => { setFilterContentType(filterContentType === "news" ? "" : "news"); setFilterFreshness(""); }} />
       </div>
 
       {/* Legend */}
