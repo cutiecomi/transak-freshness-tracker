@@ -26,6 +26,7 @@ type Override = {
   freshness?: Article["freshness"];
   reasoning?: string;
   notes?: string;
+  updatedDate?: string;
 };
 
 type Overrides = Record<number, Override>;
@@ -49,7 +50,7 @@ function escapeCsvField(val: string): string {
 }
 
 function downloadCSV(articles: Article[], overrides: Overrides) {
-  const headers = ["Title", "URL", "Publish Date", "Age (months)", "Content Type", "Category", "Tags", "Status", "Reasoning", "Notes"];
+  const headers = ["Title", "URL", "Publish Date", "Age (months)", "Content Type", "Category", "Tags", "Status", "Last Updated", "Reasoning", "Notes"];
   const rows = articles.map((a) => {
     const o = overrides[a.id];
     return [
@@ -61,6 +62,7 @@ function downloadCSV(articles: Article[], overrides: Overrides) {
       a.categories.join("; "),
       a.tags.join("; "),
       o?.freshness || a.freshness,
+      o?.updatedDate || "",
       o?.reasoning ?? a.reasoning,
       o?.notes || "",
     ].map(escapeCsvField).join(",");
@@ -84,6 +86,7 @@ function EditModal({ article, override, onSave, onClose }: {
   const [freshness, setFreshness] = useState(override.freshness || article.freshness);
   const [reasoning, setReasoning] = useState(override.reasoning ?? article.reasoning);
   const [notes, setNotes] = useState(override.notes ?? "");
+  const [updatedDate, setUpdatedDate] = useState(override.updatedDate ?? "");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -132,6 +135,23 @@ function EditModal({ article, override, onSave, onClose }: {
               placeholder="Why does this article have this status?" />
           </div>
 
+          {/* Updated Date */}
+          <div className="mb-5">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Last Updated</label>
+            <div className="flex items-center gap-3">
+              <input type="date" value={updatedDate} onChange={(e) => setUpdatedDate(e.target.value)}
+                className="bg-[#f0f4ff] border border-blue-100 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-[#0364FF] focus:ring-1 focus:ring-[#0364FF]/20" />
+              <button onClick={() => setUpdatedDate(new Date().toISOString().split("T")[0])}
+                className="text-xs px-3 py-2 rounded-lg border border-blue-200 text-[#0364FF] hover:bg-blue-50 transition-colors font-medium">
+                Set to today
+              </button>
+              {updatedDate && (
+                <button onClick={() => setUpdatedDate("")}
+                  className="text-xs text-gray-400 hover:text-red-500 transition-colors">Clear</button>
+              )}
+            </div>
+          </div>
+
           {/* Notes */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-gray-700 mb-2">Notes <span className="font-normal text-gray-400">(internal)</span></label>
@@ -152,7 +172,7 @@ function EditModal({ article, override, onSave, onClose }: {
                 className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
                 Cancel
               </button>
-              <button onClick={() => { onSave({ freshness, reasoning, notes: notes || undefined }); onClose(); }}
+              <button onClick={() => { onSave({ freshness, reasoning, notes: notes || undefined, updatedDate: updatedDate || undefined }); onClose(); }}
                 className="px-4 py-2 text-sm rounded-lg bg-[#0364FF] text-white font-medium hover:bg-blue-700 transition-colors">
                 Save changes
               </button>
@@ -414,6 +434,7 @@ export default function Dashboard({
                     {label} <span className="text-blue-200">{sortIcon(key)}</span>
                   </th>
                 ))}
+                <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wide text-gray-500 whitespace-nowrap">Updated</th>
                 <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wide text-gray-500 whitespace-nowrap">Reasoning / Notes</th>
               </tr>
             </thead>
@@ -463,6 +484,15 @@ export default function Dashboard({
                         {fc.emoji} {fc.label}
                         {hasOverride && <span className="text-[10px] opacity-60">✎</span>}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      {overrides[article.id]?.updatedDate ? (
+                        <span className="text-xs px-2 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
+                          {overrides[article.id].updatedDate}
+                        </span>
+                      ) : (
+                        <span className="text-gray-300 text-xs">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 min-w-[250px]">
                       <span className="text-xs text-gray-600 leading-relaxed">{article.reasoning}</span>
