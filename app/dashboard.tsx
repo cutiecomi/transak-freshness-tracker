@@ -472,9 +472,11 @@ export default function Dashboard({
                     </td>
                     <td className="px-4 py-3">
                       {article.categories.length > 0 ? (
-                        <span className="text-xs px-2 py-1 rounded-md bg-blue-50 text-[#0364FF] border border-blue-100 whitespace-nowrap font-medium">
-                          {article.categories[0]}
-                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {article.categories.map((c) => (
+                            <span key={c} className="text-[11px] px-2 py-0.5 rounded-md bg-blue-50 text-[#0364FF] border border-blue-100 whitespace-nowrap font-medium">{c}</span>
+                          ))}
+                        </div>
                       ) : <span className="text-gray-300">—</span>}
                     </td>
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{article.publishDate}</td>

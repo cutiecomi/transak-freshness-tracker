@@ -40,9 +40,9 @@ function detectContentType(title: string, categories: string[]): Article["conten
   const t = title.toLowerCase();
   const cats = categories.map((c) => c.toLowerCase());
 
-  // News & press releases, partnerships, integrations, product updates
+  // News & press releases, partnerships, integrations, product updates, new listings
   if (
-    cats.some((c) => c.includes("news") || c.includes("press")) ||
+    cats.some((c) => c === "announcements" || c === "partnerships" || c === "new listings" || c === "product" || c === "case studies") ||
     /\bpartner|integrat|collaborat|joins forces|teams up|powers|launches|secures|expands|raises|lists \$/i.test(title) ||
     /now (available|live|on|integrated)|is now|now supports/i.test(title)
   ) {
@@ -79,7 +79,7 @@ function detectContentType(title: string, categories: string[]): Article["conten
   }
 
   // Podcasts are evergreen conversations
-  if (cats.some((c) => c.includes("podcast"))) {
+  if (cats.some((c) => c === "podcast")) {
     return "evergreen";
   }
 
@@ -162,47 +162,80 @@ function splitAndClean(val: string): string[] {
   return val.split(",").map((s) => s.trim()).filter(Boolean);
 }
 
-function inferCategory(title: string): string[] {
-  const t = title.toLowerCase();
+function categorizeArticle(title: string): string[] {
+  const cats: string[] = [];
 
-  // Podcasts
-  if (/masters of web3|ep\d|podcast/i.test(title)) return ["Podcast"];
+  // Podcast
+  if (/masters of web3|ep\d|podcast|co-?founder.*of\b.*\b(at|labs|dao|protocol)/i.test(title)) cats.push("Podcast");
 
-  // News & Press Releases — partnerships, integrations, launches, expansions, licenses, fundraising
+  // Case Studies
+  if (/case study/i.test(title)) cats.push("Case Studies");
+
+  // Stablecoins
+  if (/\bstablecoin|usdt|usdc|pyusd|rlusd|usdg|eurc|usde|tether|paypal usd|flatcoin|dark stablecoin|cbdc|genius act|mica\b/i.test(title)) cats.push("Stablecoins");
+
+  // New Listings — new token/chain available on Transak
   if (
-    /\bpartner|integrat|collaborat|joins forces|teams up|now (available|live|on|integrated)|is now\b/i.test(title) ||
-    /\blaunches|secures|expands|raises|powers|lists \$|listed|welcomes\b/i.test(title) ||
-    /\blicense|registration|fintrac|fca |fiu-|soc 2|iso\/iec|certified|compliance\b/i.test(title) ||
-    /\bseries.[a-z]|fundraise|strategic round\b/i.test(title) ||
-    /\bannounce|growth|milestone|checkout now|support.*for\b/i.test(title) ||
-    /\bincident|maintenance|update on\b/i.test(title) ||
-    /\btransak (to |now |becomes|brings|makes|provides|adds|enables)\b/i.test(title) ||
-    /\bon transak\b|\bvia transak\b|\bwith transak\b|\busing transak\b/i.test(title)
-  ) return ["News & Press Release"];
+    /\bnow (available|listed)|lists \$|lists (HYPE|PEPE|BONK)|is now available\b/i.test(title) ||
+    /\bavailable (for purchase|on transak|via transak)\b/i.test(title) ||
+    /\btransak lists\b/i.test(title) ||
+    /\bnow available for purchases?\b/i.test(title)
+  ) cats.push("New Listings");
 
-  // Research
-  if (/\breport|state of|research|analysis\b/i.test(title)) return ["Research and Analysis"];
+  // Partnerships — integrations with external companies
+  if (
+    /\bpartner|integrat|joins forces|teams up\b/i.test(title) ||
+    /\b(metamask|phantom|ledger|coinbase|pancakeswap|uniswap|sushi|aave|bitpay|immutable|sequence|ronin|zerion|bloom|zengo|okto|tonkeeper|vechain|lukso|animoca|logx|opera|fireblocks|cobo|galxe|privado)\b/i.test(title) &&
+    /\btransak\b/i.test(title)
+  ) cats.push("Partnerships");
 
-  // Thought leadership
-  if (/\bthoughts on|opinion|future of\b/i.test(title) && !/what is/i.test(title)) return ["Thought Leader"];
+  // Product — Transak product updates, features, launches
+  if (
+    /\btransak (one|stream|nft checkout|multi-nft)\b/i.test(title) ||
+    /\bproduct update|new feature|wire transfer|apple pay|google pay|google.*sso|apple.*sso\b/i.test(title) ||
+    /\breusable kyc|transak\.com got an upgrade\b/i.test(title) ||
+    /\bintroducing transak|how to use transak\b/i.test(title)
+  ) cats.push("Product");
 
-  // Learning Hub — explainers, how-tos, guides, lists, educational
+  // Announcements — company news, regulatory, fundraising, expansions, milestones, compliance, incidents
+  if (
+    /\bseries.[a-z]|fundraise|strategic round|raises\b/i.test(title) ||
+    /\blicense|registration|fintrac|fca |fiu-|soc 2|iso\/iec|certified|regulatory|compliance footprint\b/i.test(title) ||
+    /\bexpands|expansion|launches.*in\b/i.test(title) ||
+    /\bincident|maintenance|security incident|trust notice\b/i.test(title) ||
+    /\bgrowth|milestone|2022 in review|2025\s*$|in review\b/i.test(title) ||
+    /\btransak (secures|becomes|expands|receives|celebrates|is proud|is pleased)\b/i.test(title) ||
+    /\bcommitment|self-custody|navigating.*regulation|thoughts on\b/i.test(title) ||
+    /\bjames young.*joins|advisory board\b/i.test(title) ||
+    /\bmeet team transak\b/i.test(title)
+  ) cats.push("Announcements");
+
+  // Learn — educational content, explainers, how-tos, guides, listicles
   if (
     /^what (is|are|does|makes)\b/i.test(title) ||
     /^how (to|do|does|can)\b/i.test(title) ||
     /\bexplain|guide|handbook|tutorial|beginner|101\b/i.test(title) ||
     /\bvs\.?\b|\bcomparing\b|\bdifference\b/i.test(title) ||
-    /^top \d|^\d+ (best|ways|challenges|reasons|incredible)\b/i.test(title) ||
-    /\bdecoding|understanding|breaking down|deep dive|step-by-step\b/i.test(title)
-  ) return ["Learning Hub"];
+    /^top \d|^\d+ (best|ways|challenges|reasons|incredible|premier)\b/i.test(title) ||
+    /\bdecoding|understanding|breaking down|deep dive|step-by-step\b/i.test(title) ||
+    /\bprotect yourself|crypto journey|bitcoin halving explained|ecosystem spotlight\b/i.test(title) ||
+    /\bevents (in|to look)|devcon.*guide|token2049\b/i.test(title) ||
+    /\bwhy (crypto|fintechs|vcs|wallets|smart|global|stablecoin|neobanks)\b/i.test(title) ||
+    /\bplaybook|report\b/i.test(title)
+  ) cats.push("Learn");
 
-  // Events
-  if (/\bevent|devcon|token2049|ethdenver|conference|side events\b/i.test(title)) return ["Learning Hub"];
+  // If nothing matched, infer from title patterns
+  if (cats.length === 0) {
+    if (/\btransak\b/i.test(title) && /\bwith\b|\bon\b|\bfor\b/i.test(title)) {
+      cats.push("Partnerships");
+    } else if (/\bcrypto|blockchain|web3|defi|token|wallet|nft|payment\b/i.test(title)) {
+      cats.push("Learn");
+    } else {
+      cats.push("Announcements");
+    }
+  }
 
-  // Default to Learning Hub for educational-sounding content, News for everything else
-  if (/\bcrypto|blockchain|web3|defi|stablecoin|token|wallet|nft\b/i.test(title)) return ["Learning Hub"];
-
-  return ["News & Press Release"];
+  return [...new Set(cats)];
 }
 
 function inferTags(title: string, categories: string[]): string[] {
@@ -261,9 +294,8 @@ export function loadArticles(): Article[] {
 
     const diffMs = now.getTime() - date.getTime();
     const ageMonths = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30.44)));
-    const rawCategories = splitAndClean(row["Categories"] || "");
     const rawTags = splitAndClean(row["Tags"] || "");
-    const categories = rawCategories.length > 0 ? rawCategories : inferCategory(title);
+    const categories = categorizeArticle(title);
     const tags = rawTags.length > 0 ? rawTags : inferTags(title, categories);
     const contentType = detectContentType(title, categories);
     const { freshness, reasoning } = assessFreshness(title, ageMonths, contentType);
