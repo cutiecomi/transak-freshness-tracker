@@ -162,6 +162,53 @@ function splitAndClean(val: string): string[] {
   return val.split(",").map((s) => s.trim()).filter(Boolean);
 }
 
+const TAG_NORMALIZE: Record<string, string> = {
+  "layer2": "Layer 2",
+  "layer 2": "Layer 2",
+  "tokens and standards": "Tokens & Standards",
+  "tokens and standards": "Tokens & Standards",
+  "tokens & standards": "Tokens & Standards",
+  "tokens and standard": "Tokens & Standards",
+  "explainers": "Explainer",
+  "explainer": "Explainer",
+  "partnerships and integrations": "Partnerships & Integrations",
+  "partnerships & integrations": "Partnerships & Integrations",
+  "wallets": "Wallets",
+  "wallet": "Wallets",
+  "how-to guides": "How-To Guides",
+  "on-ramp": "On-Ramp",
+  "on-Ramp": "On-Ramp",
+  "off-ramp": "Off-Ramp",
+  "product updates web3": "Product Updates",
+  "product updates": "Product Updates",
+  "simplifying user onboarding": "User Onboarding",
+  "educational": "Educational",
+  "gaming": "Gaming",
+  "games": "Gaming",
+  "nfts": "NFTs",
+  "nft checkout": "NFT Checkout",
+  "blockchain 101": "Blockchain 101",
+  "defi": "DeFi",
+  "web3": "Web3",
+  "security": "Security",
+  "kyc": "KYC",
+  "launch": "Launch",
+  "expansion": "Expansion",
+  "events": "Events",
+  "reviews": "Reviews",
+  "announcements": "Announcements",
+  "ecosystem": "Ecosystem",
+  "transak one": "Transak One",
+};
+
+function normalizeTags(tags: string[]): string[] {
+  const normalized = tags.map((t) => {
+    const key = t.toLowerCase().trim();
+    return TAG_NORMALIZE[key] || t;
+  });
+  return [...new Set(normalized)];
+}
+
 function categorizeArticle(title: string): string[] {
   const cats: string[] = [];
 
@@ -296,7 +343,7 @@ export function loadArticles(): Article[] {
     const ageMonths = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30.44)));
     const rawTags = splitAndClean(row["Tags"] || "");
     const categories = categorizeArticle(title);
-    const tags = rawTags.length > 0 ? rawTags : inferTags(title, categories);
+    const tags = normalizeTags(rawTags.length > 0 ? rawTags : inferTags(title, categories));
     const contentType = detectContentType(title, categories);
     const { freshness, reasoning } = assessFreshness(title, ageMonths, contentType);
 
