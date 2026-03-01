@@ -166,7 +166,6 @@ const TAG_NORMALIZE: Record<string, string> = {
   "layer2": "Layer 2",
   "layer 2": "Layer 2",
   "tokens and standards": "Tokens & Standards",
-  "tokens and standards": "Tokens & Standards",
   "tokens & standards": "Tokens & Standards",
   "tokens and standard": "Tokens & Standards",
   "explainers": "Explainer",
